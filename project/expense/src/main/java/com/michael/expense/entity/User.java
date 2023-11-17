@@ -23,7 +23,11 @@ import java.util.List;
 @Table(name = "users")
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "user_sequence",
+            sequenceName = "user_sequence",
+            allocationSize = 1
+    )
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_sequence")
     private Long id;
     @Column(name = "username", unique = true, nullable = false)
     private String username;
@@ -38,7 +42,7 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_role",nullable = false, updatable = true)
+    @Column(name = "user_role", nullable = false, updatable = true)
     private UserRole role;
 
 
