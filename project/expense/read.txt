@@ -2,10 +2,8 @@ TODO:
 
 1. pagination
 2. logout
-3. Email Verification
-    -confirmation token
+3  refresh token
 4. password matching
 5.methods:
-   -refresh token
    -forget password
    -change password

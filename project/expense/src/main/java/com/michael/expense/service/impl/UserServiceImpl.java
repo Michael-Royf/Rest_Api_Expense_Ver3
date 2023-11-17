@@ -1,7 +1,9 @@
 package com.michael.expense.service.impl;
 
 import com.michael.expense.entity.EmailConfirmationToken;
+import com.michael.expense.entity.JWTToken;
 import com.michael.expense.entity.User;
+import com.michael.expense.entity.enumerations.TokenType;
 import com.michael.expense.entity.enumerations.UserRole;
 import com.michael.expense.exceptions.payload.EmailExistException;
 import com.michael.expense.exceptions.payload.UserNotFoundException;
@@ -11,6 +13,7 @@ import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.JwtAuthResponse;
 import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.payload.response.UserResponse;
+import com.michael.expense.repository.JwtTokenRepository;
 import com.michael.expense.repository.UserRepository;
 import com.michael.expense.security.JwtTokenProvider;
 import com.michael.expense.service.EmailConfirmationTokenService;
@@ -55,6 +58,7 @@ public class UserServiceImpl implements UserService {
     private final EmailBuilder emailBuilder;
     private final RandomUtils randomUtils;
     private final EmailSender emailSender;
+    private final JwtTokenRepository jwtTokenRepository;
 
     @Override
     public String createUser(UserRequest userRequest) {
@@ -82,13 +86,14 @@ public class UserServiceImpl implements UserService {
                 .expiredAt(LocalDateTime.now().plusMinutes(15))
                 .user(user)
                 .build();
+
+
         emailConfirmationTokenService.saveConfirmationToken(confirmationToken);
         String link = LINK_FOR_CONFIRMATION + token;
         emailSender.sendEmailForVerification(
                 user.getEmail(),
                 emailBuilder.buildEmailForConfirmationEmail(user.getFirstName(), link)
         );
-
 
         return "User registered successfully! \n" +
                 "Check your email address.";
@@ -102,14 +107,14 @@ public class UserServiceImpl implements UserService {
                         loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authenticate);
         String username = authenticate.getName();
-        //   User user = findUserByUsernameInDB(username);
+        User user = findUserByUsernameInDB(username);
 
         String jwtAccessToken = jwtTokenProvider.generateAccessToken(username);
         String jwtRefreshToken = jwtTokenProvider.generateRefreshToken(username);
 
-//        Token token = createTokenForDB(user, jwtAccessToken);
-//        revokeAllUserTokens(user);
-//        tokenRepository.save(token);
+        JWTToken jwtToken = createTokenForDB(user, jwtAccessToken);
+        revokeAllUserJWTTokens(user);
+        jwtTokenRepository.save(jwtToken);
         return JwtAuthResponse.builder()
                 .accessToken(jwtAccessToken)
                 .refreshToken(jwtRefreshToken)
@@ -239,6 +244,29 @@ public class UserServiceImpl implements UserService {
             }
         }
         return result.toString().trim();
+    }
+
+
+    private JWTToken createTokenForDB(User user, String accessToken) {
+        return JWTToken.builder()
+                .user(user)
+                .token(accessToken)
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .revoked(false)
+                .build();
+    }
+
+    private void revokeAllUserJWTTokens(User user) {
+        List<JWTToken> validUserTokens = jwtTokenRepository.findAllValidTokensByUser(user.getId());
+        if (validUserTokens.isEmpty()) {
+            return;
+        }
+        validUserTokens.forEach(t -> {
+            t.setExpired(true);
+            t.setRevoked(true);
+        });
+        jwtTokenRepository.saveAll(validUserTokens);
     }
 
 

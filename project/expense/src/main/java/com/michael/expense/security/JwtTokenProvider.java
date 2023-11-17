@@ -10,16 +10,14 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 
+import static com.michael.expense.constant.SecurityConstant.EXPIRATION_TIME_FOR_ACCESS_TOKEN;
+import static com.michael.expense.constant.SecurityConstant.EXPIRATION_TIME_FOR_REFRESH_TOKEN;
+
 @Component
 public class JwtTokenProvider {
 
-
     @Value("${app.jwt-secret}")
     private String jwtSecret;
-
-    public static final long EXPIRATION_TIME_FOR_ACCESS_TOKEN = 720_000;
-    public static final long EXPIRATION_TIME_FOR_REFRESH_TOKEN = 3_600_000; // 60 min
-    //604_800_000 7 days
 
     // generate access JWT token
     public String generateAccessToken(String username) {
