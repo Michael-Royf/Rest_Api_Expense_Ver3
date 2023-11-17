@@ -6,6 +6,8 @@ import com.michael.expense.payload.response.JwtAuthResponse;
 import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.payload.response.UserResponse;
 import com.michael.expense.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,10 +31,7 @@ public class UserController {
         return new ResponseEntity<>(userService.createUser(userRequest), CREATED);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<JwtAuthResponse> login(@RequestBody @Valid LoginRequest loginRequest) {
-        return ResponseEntity.ok(userService.login(loginRequest));
-    }
+
 
     @GetMapping("/user/get/my_profile")
     public ResponseEntity<UserResponse> getUserProfile() {

@@ -1,16 +1,12 @@
 package com.michael.expense.service.impl;
 
 import com.michael.expense.entity.EmailConfirmationToken;
-import com.michael.expense.entity.JWTToken;
 import com.michael.expense.entity.User;
-import com.michael.expense.entity.enumerations.TokenType;
 import com.michael.expense.entity.enumerations.UserRole;
 import com.michael.expense.exceptions.payload.EmailExistException;
 import com.michael.expense.exceptions.payload.UserNotFoundException;
 import com.michael.expense.exceptions.payload.UsernameExistException;
-import com.michael.expense.payload.request.LoginRequest;
 import com.michael.expense.payload.request.UserRequest;
-import com.michael.expense.payload.response.JwtAuthResponse;
 import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.payload.response.UserResponse;
 import com.michael.expense.repository.JwtTokenRepository;
@@ -26,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -87,7 +82,6 @@ public class UserServiceImpl implements UserService {
                 .user(user)
                 .build();
 
-
         emailConfirmationTokenService.saveConfirmationToken(confirmationToken);
         String link = LINK_FOR_CONFIRMATION + token;
         emailSender.sendEmailForVerification(
@@ -97,28 +91,6 @@ public class UserServiceImpl implements UserService {
 
         return "User registered successfully! \n" +
                 "Check your email address.";
-    }
-
-    @Override
-    public JwtAuthResponse login(LoginRequest loginRequest) {
-        Authentication authenticate = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsernameOrEmail(),
-                        loginRequest.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authenticate);
-        String username = authenticate.getName();
-        User user = findUserByUsernameInDB(username);
-
-        String jwtAccessToken = jwtTokenProvider.generateAccessToken(username);
-        String jwtRefreshToken = jwtTokenProvider.generateRefreshToken(username);
-
-        JWTToken jwtToken = createTokenForDB(user, jwtAccessToken);
-        revokeAllUserJWTTokens(user);
-        jwtTokenRepository.save(jwtToken);
-        return JwtAuthResponse.builder()
-                .accessToken(jwtAccessToken)
-                .refreshToken(jwtRefreshToken)
-                .build();
     }
 
     @Override
@@ -182,7 +154,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private User validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail) throws UserNotFoundException, UsernameExistException, EmailExistException {
+    private void validateNewUsernameAndEmail(String currentUsername, String newUsername, String newEmail) throws UserNotFoundException, UsernameExistException, EmailExistException {
         User userByNewUsername = findOptionalUserByUsername(newUsername).orElse(null);
         User userByNewEmail = findOptionalUserByEmail(newEmail).orElse(null);
         if (StringUtils.isNotBlank(currentUsername)) {
@@ -196,7 +168,6 @@ public class UserServiceImpl implements UserService {
             if (userByNewEmail != null && !currentUser.getId().equals(userByNewEmail.getId())) {
                 throw new EmailExistException(EMAIL_ALREADY_EXISTS);
             }
-            return currentUser;
         } else {
             if (userByNewUsername != null) {
                 throw new UsernameExistException(USERNAME_ALREADY_EXISTS);
@@ -204,7 +175,6 @@ public class UserServiceImpl implements UserService {
             if (userByNewEmail != null) {
                 throw new EmailExistException(EMAIL_ALREADY_EXISTS);
             }
-            return null;
         }
     }
 
@@ -245,29 +215,5 @@ public class UserServiceImpl implements UserService {
         }
         return result.toString().trim();
     }
-
-
-    private JWTToken createTokenForDB(User user, String accessToken) {
-        return JWTToken.builder()
-                .user(user)
-                .token(accessToken)
-                .tokenType(TokenType.BEARER)
-                .expired(false)
-                .revoked(false)
-                .build();
-    }
-
-    private void revokeAllUserJWTTokens(User user) {
-        List<JWTToken> validUserTokens = jwtTokenRepository.findAllValidTokensByUser(user.getId());
-        if (validUserTokens.isEmpty()) {
-            return;
-        }
-        validUserTokens.forEach(t -> {
-            t.setExpired(true);
-            t.setRevoked(true);
-        });
-        jwtTokenRepository.saveAll(validUserTokens);
-    }
-
 
 }

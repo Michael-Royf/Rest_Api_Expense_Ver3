@@ -2,7 +2,6 @@ package com.michael.expense.config;
 
 import com.michael.expense.security.JwtAuthenticationEntryPoint;
 import com.michael.expense.security.JwtAuthenticationFilter;
-import com.michael.expense.service.impl.LogoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +24,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final AuthenticationProvider authenticationProvider;
-    private final LogoutService logoutService;
+    //  private final LogoutService logoutService;
+    private final LogoutHandler logoutHandler;
 
 
     @Bean
@@ -36,13 +37,14 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/user/register").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/confirm_email/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/refresh_token").permitAll()
                                 .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout()
                 .logoutUrl("/api/v1/logout")
-                .addLogoutHandler(logoutService)
+                .addLogoutHandler(logoutHandler)
                 .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext());
         return http.build();
     }

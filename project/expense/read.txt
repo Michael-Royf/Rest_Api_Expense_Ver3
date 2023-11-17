@@ -1,9 +1,9 @@
 TODO:
 
-1. pagination
-2. logout
+1. pagination for  method get all users
+
 3  refresh token
 4. password matching
 5.methods:
-   -forget password
+   -forgot password
    -change password

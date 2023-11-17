@@ -15,7 +15,7 @@ public class SecurityConstant {
     public static final String FORBIDDEN_MESSAGE = "You need to log in to access this page";
     public static final String ACCESS_DENIED_MESSAGE = "You do not have permission to access this page";
     public static final String OPTIONS_HTTP_METHOD = "OPTIONS";
-    public static final String REFRESH_TOKEN_NOT_FOUND = "Refresh token not found";
+    public static final String REFRESH_TOKEN_NOT_FOUND_OR_EXPIRED = "Refresh token not found or expired";
     public static final String REFRESH_TOKEN_EXPIRED = "Refresh token was expired. Please make a new signin request";
     public static final String VERIFICATION_TOKEN_NOT_FOUND = "Verification Token not found";
     public static final String VERIFICATION_TOKEN_EXPIRED = "Verification token expired";

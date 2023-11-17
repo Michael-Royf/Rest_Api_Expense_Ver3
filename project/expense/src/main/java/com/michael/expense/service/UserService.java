@@ -6,13 +6,13 @@ import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.JwtAuthResponse;
 import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.payload.response.UserResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 
 public interface UserService {
     String createUser(UserRequest userRequest);
-
-    JwtAuthResponse login(LoginRequest loginRequest);
 
     User getLoggedInUser();
 
@@ -29,4 +29,6 @@ public interface UserService {
     UserResponse updateUser(UserRequest userRequest);
 
     MessageResponse deleteUserProfile();
+
+
 }
