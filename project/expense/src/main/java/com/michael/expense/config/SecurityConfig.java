@@ -30,9 +30,9 @@ public class SecurityConfig {
         http.csrf().disable()
                 .authorizeHttpRequests(authorize ->
                         authorize
-
                                 .requestMatchers(HttpMethod.POST, "/api/v1/user/register").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/v1/confirm_email/**").permitAll()
                                 .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

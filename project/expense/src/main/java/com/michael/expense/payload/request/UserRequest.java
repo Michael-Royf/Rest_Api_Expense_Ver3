@@ -21,6 +21,8 @@ public class UserRequest {
     @Pattern(regexp = "^(?!\\s)(.*\\S)$", message = "The lastName should not start or end with a space")
     private String lastName;
     @Email
+    @Pattern(regexp = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?",
+            message = "не соответствует паттерну")
     @NotBlank(message = "Email should not be empty")
     private String email;
     //todo: matching password

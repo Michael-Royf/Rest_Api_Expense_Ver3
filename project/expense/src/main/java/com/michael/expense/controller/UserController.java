@@ -25,7 +25,7 @@ public class UserController {
 
 
     @PostMapping("/user/register")
-    public ResponseEntity<UserResponse> registerUser(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<String> registerUser(@RequestBody @Valid UserRequest userRequest) {
         return new ResponseEntity<>(userService.createUser(userRequest), CREATED);
     }
 
@@ -58,22 +58,19 @@ public class UserController {
 
     @GetMapping("/user/get/allUsers")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
-        return new ResponseEntity<List<UserResponse>>(userService.getAllUsers(), OK);
+        return new ResponseEntity<>(userService.getAllUsers(), OK);
     }
 
 
     @PutMapping("/user/update_profile")
-    public ResponseEntity<UserResponse> updateUser(
-                                                   @RequestBody UserRequest userRequest) {
-        return new ResponseEntity<>(userService.updateUser( userRequest), OK);
+    public ResponseEntity<UserResponse> updateUser(@RequestBody @Valid UserRequest userRequest) {
+        return new ResponseEntity<>(userService.updateUser(userRequest), OK);
     }
 
     @DeleteMapping("/user/remove_profile")
     public ResponseEntity<MessageResponse> removeUser() {
         return new ResponseEntity<>(userService.deleteUserProfile(), OK);
     }
-
-
 
 
 }

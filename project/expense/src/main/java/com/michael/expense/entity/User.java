@@ -29,30 +29,32 @@ public class User implements UserDetails {
     )
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_sequence")
     private Long id;
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String username;
     @Column(name = "first_name", nullable = false)
     private String firstName;
     @Column(name = "last_name", nullable = false)
     private String lastName;
-    @Column(name = "email", nullable = false)
+    @Column(nullable = false)
     private String email;
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     @JsonIgnore
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role", nullable = false, updatable = true)
-    private UserRole role;
+    private UserRole userRole;
 
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime registration_timestamp;
-    @UpdateTimestamp
-    @Column(updatable = true)
+    @UpdateTimestamp()
+    @Column
     private LocalDateTime update_profile_timestamp;
 
+    @Column(name = "last_login_date")
+    private LocalDateTime lastLoginDate;
 
     private Boolean isNotLocked;
     private Boolean isActive;
@@ -60,7 +62,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(this.role.name()));
+        return List.of(new SimpleGrantedAuthority(this.userRole.name()));
     }
 
     @Override
@@ -70,7 +72,8 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+      return !isNotLocked;
+   //     return true;
     }
 
     @Override
@@ -80,6 +83,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+      return isActive;
+      //  return true;
     }
 }

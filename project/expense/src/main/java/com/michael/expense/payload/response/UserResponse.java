@@ -1,5 +1,6 @@
 package com.michael.expense.payload.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,10 @@ public class UserResponse {
     private String email;
     private String password;
 
+    @JsonFormat(pattern = "yyyy-mm-dd HH:mm:ss", timezone = "Israel")
     private LocalDateTime registration_timestamp;
+    @JsonFormat(pattern = "yyyy-mm-dd HH:mm:ss", timezone = "Israel")
     private LocalDateTime update_profile_timestamp;
+    @JsonFormat(pattern = "yyyy-mm-dd HH:mm:ss", timezone = "Israel")
+    private LocalDateTime lastLoginDate;
 }

@@ -10,7 +10,7 @@ import com.michael.expense.payload.response.UserResponse;
 import java.util.List;
 
 public interface UserService {
-    UserResponse createUser(UserRequest userRequest);
+    String createUser(UserRequest userRequest);
 
     JwtAuthResponse login(LoginRequest loginRequest);
 

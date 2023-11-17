@@ -1,5 +1,6 @@
 package com.michael.expense.service.impl;
 
+import com.michael.expense.entity.EmailConfirmationToken;
 import com.michael.expense.entity.User;
 import com.michael.expense.entity.enumerations.UserRole;
 import com.michael.expense.exceptions.payload.EmailExistException;
@@ -12,7 +13,11 @@ import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.payload.response.UserResponse;
 import com.michael.expense.repository.UserRepository;
 import com.michael.expense.security.JwtTokenProvider;
+import com.michael.expense.service.EmailConfirmationTokenService;
+import com.michael.expense.service.EmailSender;
 import com.michael.expense.service.UserService;
+import com.michael.expense.utility.EmailBuilder;
+import com.michael.expense.utility.RandomUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +29,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,16 +41,23 @@ import static com.michael.expense.constant.UserConstant.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional //!!
 public class UserServiceImpl implements UserService {
+
+    public static final String LINK_FOR_CONFIRMATION = "http://localhost:8080/api/v1/confirm_email?token=";
 
     private final UserRepository userRepository;
     private final ModelMapper mapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+    private final EmailConfirmationTokenService emailConfirmationTokenService;
+    private final EmailBuilder emailBuilder;
+    private final RandomUtils randomUtils;
+    private final EmailSender emailSender;
 
     @Override
-    public UserResponse createUser(UserRequest userRequest) {
+    public String createUser(UserRequest userRequest) {
 
         validateNewUsernameAndEmail(
                 StringUtils.EMPTY,
@@ -52,14 +66,32 @@ public class UserServiceImpl implements UserService {
 
         User user = User.builder()
                 .username(userRequest.getUsername())
-                .firstName(userRequest.getFirstName())
-                .lastName(userRequest.getLastName())
+                .firstName(firstLetterUpper(userRequest.getFirstName()))
+                .lastName(firstLetterUpper(userRequest.getLastName()))
                 .email(userRequest.getEmail())
                 .password(passwordEncoder.encode(userRequest.getPassword()))
-                .role(UserRole.ROLE_USER)
+                .userRole(UserRole.ROLE_USER)
+                .isNotLocked(false)
                 .build();
         user = userRepository.save(user);
-        return mapper.map(user, UserResponse.class);
+
+        String token = randomUtils.generateTokenForEmailVerification();
+        EmailConfirmationToken confirmationToken = EmailConfirmationToken.builder()
+                .token(token)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .user(user)
+                .build();
+        emailConfirmationTokenService.saveConfirmationToken(confirmationToken);
+        String link = LINK_FOR_CONFIRMATION + token;
+        emailSender.sendEmailForVerification(
+                user.getEmail(),
+                emailBuilder.buildEmailForConfirmationEmail(user.getFirstName(), link)
+        );
+
+
+        return "User registered successfully! \n" +
+                "Check your email address.";
     }
 
     @Override
@@ -131,8 +163,8 @@ public class UserServiceImpl implements UserService {
                 userRequest.getEmail().trim().toLowerCase());
 
         user.setUsername(userRequest.getUsername());
-        user.setFirstName(userRequest.getFirstName());
-        user.setLastName(userRequest.getLastName());
+        user.setFirstName(firstLetterUpper(userRequest.getFirstName()));
+        user.setLastName(firstLetterUpper(userRequest.getLastName()));
         user = userRepository.save(user);
         return mapper.map(user, UserResponse.class);
     }
@@ -193,6 +225,20 @@ public class UserServiceImpl implements UserService {
     private User findUserByEmailInDB(String email) {
         return findOptionalUserByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(String.format(NO_USER_FOUND_BY_EMAIL, email)));
+    }
+
+    private String firstLetterUpper(String world) {
+        String[] words = world.split(" ");
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+            if (word.length() > 0) {
+                char firstChar = Character.toUpperCase(word.charAt(0));
+                String capitalizedWord = firstChar + word.substring(1).toLowerCase();
+                result.append(capitalizedWord).append(" ");
+            }
+        }
+        return result.toString().trim();
     }
 
 
