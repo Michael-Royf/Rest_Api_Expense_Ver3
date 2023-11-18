@@ -12,7 +12,6 @@ import java.util.Date;
 @Getter
 @Setter
 public class ErrorResponseMessage {
-
     private Date timestamp;
     private int httpStatusCode;
     private HttpStatus httpStatus;

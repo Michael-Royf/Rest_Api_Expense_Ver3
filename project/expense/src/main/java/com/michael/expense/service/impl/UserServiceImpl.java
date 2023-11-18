@@ -57,7 +57,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String createUser(UserRequest userRequest) {
-
         validateNewUsernameAndEmail(
                 StringUtils.EMPTY,
                 userRequest.getUsername().trim(),
@@ -187,17 +186,16 @@ public class UserServiceImpl implements UserService {
         return userRepository.findUserByUsername(username);
     }
 
-    private User findUserByUsernameInDB(String username) {
+    protected User findUserByUsernameInDB(String username) {
         return findOptionalUserByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(NO_USER_FOUND_BY_USERNAME + username));
     }
-
 
     private Optional<User> findOptionalUserByEmail(String email) {
         return userRepository.findUserByEmail(email);
     }
 
-    private User findUserByEmailInDB(String email) {
+    protected User findUserByEmailInDB(String email) {
         return findOptionalUserByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(String.format(NO_USER_FOUND_BY_EMAIL, email)));
     }

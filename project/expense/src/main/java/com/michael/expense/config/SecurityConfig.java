@@ -38,6 +38,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/confirm_email/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/refresh_token").permitAll()
+                                .requestMatchers(HttpMethod.PATCH, "/api/v1/reset-password").permitAll()
                                 .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

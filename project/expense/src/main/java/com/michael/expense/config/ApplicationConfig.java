@@ -1,6 +1,6 @@
 package com.michael.expense.config;
 
-import com.michael.expense.constant.UserConstant;
+
 import com.michael.expense.entity.User;
 import com.michael.expense.exceptions.payload.UserNotFoundException;
 import com.michael.expense.repository.UserRepository;

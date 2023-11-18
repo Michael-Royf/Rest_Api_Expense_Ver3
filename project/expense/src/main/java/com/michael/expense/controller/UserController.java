@@ -1,5 +1,6 @@
 package com.michael.expense.controller;
 
+import com.michael.expense.payload.request.ChangePasswordRequest;
 import com.michael.expense.payload.request.LoginRequest;
 import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.JwtAuthResponse;
@@ -70,6 +71,8 @@ public class UserController {
     public ResponseEntity<MessageResponse> removeUser() {
         return new ResponseEntity<>(userService.deleteUserProfile(), OK);
     }
+
+
 
 
 }
