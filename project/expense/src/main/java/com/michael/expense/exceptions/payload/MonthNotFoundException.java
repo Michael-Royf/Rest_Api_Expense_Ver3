@@ -1,9 +1,9 @@
 package com.michael.expense.exceptions.payload;
 
-public class EmailExistException extends RuntimeException {
+public class MonthNotFoundException extends RuntimeException{
     private static final long serialVersionUID = 1L;
 
-    public EmailExistException(String message) {
+    public MonthNotFoundException(String message) {
         super(message);
     }
 }

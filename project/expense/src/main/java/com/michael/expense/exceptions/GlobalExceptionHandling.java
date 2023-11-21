@@ -1,9 +1,6 @@
 package com.michael.expense.exceptions;
 
-import com.michael.expense.exceptions.payload.EmailExistException;
-import com.michael.expense.exceptions.payload.TokenException;
-import com.michael.expense.exceptions.payload.UserNotFoundException;
-import com.michael.expense.exceptions.payload.UsernameExistException;
+import com.michael.expense.exceptions.payload.*;
 import com.michael.expense.payload.response.ErrorResponseMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -47,6 +44,17 @@ public class GlobalExceptionHandling extends ResponseEntityExceptionHandler {
         return createHttpResponse(INTERNAL_SERVER_ERROR, ERROR_PROCESSING_FILE);
     }
 
+    @ExceptionHandler(ExpenseNotFoundException.class)
+    public ResponseEntity<ErrorResponseMessage> handleMethodExpenseNotFound(ExpenseNotFoundException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler( MonthNotFoundException.class)
+    public ResponseEntity<ErrorResponseMessage> handleMethodMonthNotFoundException( MonthNotFoundException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(BAD_REQUEST, exception.getMessage());
+    }
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponseMessage> handleMethodUserNotFound(UserNotFoundException exception) {
         log.error(exception.getMessage());
@@ -106,6 +114,4 @@ public class GlobalExceptionHandling extends ResponseEntityExceptionHandler {
                         message),
                 httpStatus);
     }
-
-
 }

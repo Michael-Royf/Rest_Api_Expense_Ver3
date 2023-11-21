@@ -8,10 +8,9 @@ import com.michael.expense.exceptions.payload.UserNotFoundException;
 import com.michael.expense.exceptions.payload.UsernameExistException;
 import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.MessageResponse;
+import com.michael.expense.payload.response.UserPaginationResponse;
 import com.michael.expense.payload.response.UserResponse;
-import com.michael.expense.repository.JwtTokenRepository;
 import com.michael.expense.repository.UserRepository;
-import com.michael.expense.security.JwtTokenProvider;
 import com.michael.expense.service.EmailConfirmationTokenService;
 import com.michael.expense.service.EmailSender;
 import com.michael.expense.service.UserService;
@@ -21,7 +20,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -47,13 +49,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ModelMapper mapper;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final AuthenticationManager authenticationManager;
     private final EmailConfirmationTokenService emailConfirmationTokenService;
     private final EmailBuilder emailBuilder;
     private final RandomUtils randomUtils;
     private final EmailSender emailSender;
-    private final JwtTokenRepository jwtTokenRepository;
+
 
     @Override
     public String createUser(UserRequest userRequest) {
@@ -121,12 +121,24 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    //todo: Pagination
+
     @Override
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
+    public UserPaginationResponse getAllUsers(int pageNo, int pageSiZe, String sortBy, String sortDir) {
+        Pageable pageable = createPageable(pageNo, pageSiZe, sortBy, sortDir);
+        Page<User> users =  userRepository.findAll(pageable);
+
+        List<UserResponse> userResponses = users.stream()
                 .map(user -> mapper.map(user, UserResponse.class))
                 .collect(Collectors.toList());
+
+        return UserPaginationResponse.builder()
+                .content(userResponses)
+                .pageNo(users.getNumber())
+                .pageSize(users.getSize())
+                .totalElements(users.getTotalElements())
+                .totalPages(users.getTotalPages())
+                .last(users.isLast())
+                .build();
     }
 
     @Override
@@ -212,6 +224,12 @@ public class UserServiceImpl implements UserService {
             }
         }
         return result.toString().trim();
+    }
+
+    private Pageable createPageable(int pageNo, int pageSiZe, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ?
+                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        return PageRequest.of(pageNo, pageSiZe, sort);
     }
 
 }

@@ -14,4 +14,8 @@ public class UserConstant {
     public static final String PASSWORD_WAS_UPDATED = "Password was updated";
     public static final String PASSWORD_ENTERED_INCORRECTLY = "The current password was entered incorrectly";
     public static final String USER_DELETED = "User with username: %s was deleted";
+    public static final String EXPENSE_DELETED = "Expense with id: %s was deleted";
+    public static final String NO_EXPENSE_FOUND_BY_ID = "Expense with id: %s not found";
+
+
 }

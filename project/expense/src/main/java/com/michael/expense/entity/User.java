@@ -48,6 +48,8 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<JWTToken> jwtTokens;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Expense> expenses;
 
     @CreationTimestamp
     @Column(updatable = false)
@@ -76,7 +78,6 @@ public class User implements UserDetails {
     @Override
     public boolean isAccountNonLocked() {
         return !isNotLocked;
-        //     return true;
     }
 
     @Override
@@ -87,6 +88,5 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isActive;
-        //  return true;
     }
 }

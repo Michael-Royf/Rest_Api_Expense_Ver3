@@ -6,9 +6,11 @@ import com.michael.expense.payload.request.LoginRequest;
 import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.JwtAuthResponse;
 import com.michael.expense.payload.response.MessageResponse;
+import com.michael.expense.payload.response.UserPaginationResponse;
 import com.michael.expense.payload.response.UserResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -25,7 +27,7 @@ public interface UserService {
 
     UserResponse getUserByUsername(String username);
 
-    List<UserResponse> getAllUsers();
+    UserPaginationResponse getAllUsers(int pageNo, int pageSiZe, String sortBy, String sortDir);
 
     UserResponse updateUser(UserRequest userRequest);
 

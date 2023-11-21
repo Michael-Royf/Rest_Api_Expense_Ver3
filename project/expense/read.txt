@@ -1,9 +1,7 @@
 TODO:
 
-1. pagination for  method get all users
+1.pagination for  method get all users
+2.Brute force attack
+3. user avatar
 
-3  refresh token
-4. password matching
-5.methods:
-   -forgot password
-   -change password
+4.date expense
