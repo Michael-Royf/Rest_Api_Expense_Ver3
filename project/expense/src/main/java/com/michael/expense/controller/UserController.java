@@ -1,19 +1,27 @@
 package com.michael.expense.controller;
 
 
+import com.michael.expense.entity.User;
 import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.payload.response.UserPaginationResponse;
 import com.michael.expense.payload.response.UserResponse;
+import com.michael.expense.service.ProfileImageService;
 import com.michael.expense.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+
 import static com.michael.expense.constant.PaginationConstants.*;
-import static com.michael.expense.constant.PaginationConstants.DEFAULT_SORT_DIRECTION;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.IMAGE_JPEG_VALUE;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -21,6 +29,7 @@ import static org.springframework.http.HttpStatus.OK;
 public class UserController {
 
     private final UserService userService;
+    private final ProfileImageService profileImageService;
 
     @PostMapping("/user/register")
     public ResponseEntity<String> registerUser(@RequestBody @Valid UserRequest userRequest) {
@@ -28,7 +37,7 @@ public class UserController {
     }
 
     @GetMapping("/user/get/my_profile")
-    public ResponseEntity<UserResponse> getUserProfile() {
+    public ResponseEntity<UserResponse> getMyUserProfile() {
         return new ResponseEntity<>(userService.getMyProfile(), OK);
     }
 
@@ -66,6 +75,28 @@ public class UserController {
     @DeleteMapping("/user/remove_profile")
     public ResponseEntity<MessageResponse> removeUser() {
         return new ResponseEntity<>(userService.deleteUserProfile(), OK);
+    }
+
+
+    @GetMapping(path = "/user/image/{username}/{filename}", produces = IMAGE_JPEG_VALUE)
+    public ResponseEntity<?> getProfileImage(@PathVariable("username") String username,
+                                             @PathVariable("filename") String fileName) {
+        byte[] profileImage = profileImageService.getProfileImage(username, fileName);
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf(IMAGE_JPEG_VALUE))
+                .body(new ByteArrayResource(profileImage));
+    }
+
+    @PostMapping("/user/update_profile_image")
+    public ResponseEntity<UserResponse> updateProfileImage(@RequestParam(value = "profileImage") MultipartFile profileImage) throws IOException {
+        User user = userService.getLoggedInUser();
+        return new ResponseEntity<>(profileImageService.updateProfileImage(user, profileImage), OK);
+    }
+
+    @DeleteMapping("/user/delete_profile_image")
+    public ResponseEntity<UserResponse> deleteProfileImage() throws IOException {
+        User user = userService.getLoggedInUser();
+        return new ResponseEntity<>(profileImageService.deleteProfileImageAndSetDefaultImage(user), OK);
     }
 
 }

@@ -4,6 +4,7 @@ package com.michael.expense.config;
 import com.michael.expense.entity.User;
 import com.michael.expense.exceptions.payload.UserNotFoundException;
 import com.michael.expense.repository.UserRepository;
+import com.michael.expense.service.impl.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,7 @@ import static com.michael.expense.constant.UserConstant.NO_USER_FOUND_BY_EMAIL_O
 public class ApplicationConfig {
 
     private final UserRepository userRepository;
+    private final LoginAttemptService loginAttemptService;
 
     @Bean
     public ModelMapper modelMapper() {
@@ -42,6 +44,7 @@ public class ApplicationConfig {
             User user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                     .orElseThrow(() -> new UserNotFoundException(String.format(NO_USER_FOUND_BY_EMAIL_OR_USERNAME, usernameOrEmail)));
             user.setLastLoginDate(LocalDateTime.now());
+            validateLoginAttempt(user);
             user = userRepository.save(user);
             return user;
         };
@@ -59,5 +62,17 @@ public class ApplicationConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    private void validateLoginAttempt(User user) {
+        if (user.getIsNotLocked()) {
+            if (loginAttemptService.hasExceededMaxAttempts(user.getUsername())) {
+                user.setIsNotLocked(false);
+            } else {
+                user.setIsNotLocked(true);
+            }
+        } else {
+            loginAttemptService.evictUserFromLoginAttemptCache(user.getUsername());
+        }
     }
 }

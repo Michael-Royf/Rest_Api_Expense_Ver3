@@ -1,11 +1,14 @@
 package com.michael.expense.service.impl;
 
+import com.michael.expense.entity.EmailConfirmationToken;
 import com.michael.expense.entity.JWTToken;
 import com.michael.expense.entity.User;
 import com.michael.expense.entity.enumerations.TokenType;
+import com.michael.expense.entity.enumerations.UserRole;
 import com.michael.expense.exceptions.payload.TokenException;
 import com.michael.expense.payload.request.ChangePasswordRequest;
 import com.michael.expense.payload.request.LoginRequest;
+import com.michael.expense.payload.request.UserRequest;
 import com.michael.expense.payload.response.JwtAuthResponse;
 import com.michael.expense.payload.response.MessageResponse;
 import com.michael.expense.repository.JwtTokenRepository;
@@ -18,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.michael.expense.constant.SecurityConstant.REFRESH_TOKEN_NOT_FOUND_OR_EXPIRED;
@@ -46,8 +51,6 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RandomUtils randomUtils;
     private final EmailSender emailSender;
-
-
 
 
     @Override
@@ -80,7 +83,6 @@ public class AuthServiceImpl implements AuthService {
         if (org.springframework.util.StringUtils.hasText(refreshToken)
                 && jwtTokenProvider.validateToken(refreshToken)) {
             String username = jwtTokenProvider.getUsername(refreshToken);
-
             User user = userService.findUserByUsernameInDB(username);
             String accessToken = jwtTokenProvider.generateAccessToken(username);
             revokeAllUserJWTTokens(user);
@@ -147,6 +149,5 @@ public class AuthServiceImpl implements AuthService {
         }
         return null;
     }
-
 
 }

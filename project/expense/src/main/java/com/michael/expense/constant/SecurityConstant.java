@@ -21,4 +21,10 @@ public class SecurityConstant {
     public static final String VERIFICATION_TOKEN_EXPIRED = "Verification token expired";
     public static final String TOKEN_CANNOT_BE_VERIFIED = "Token cannot be verified";
 
+    public static final String LINK_FOR_CONFIRMATION = "http://localhost:8080/api/v1/confirm_email?token=";
+
+    //for brute force attack
+    public static final int MAXIMUM_NUMBER_OF_ATTEMPTS = 5;
+    public static final int ATTEMPT_INCREMENT = 1;
+
 }

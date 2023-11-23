@@ -1,6 +1,7 @@
 package com.michael.expense.service.impl;
 
 import com.michael.expense.entity.EmailConfirmationToken;
+import com.michael.expense.entity.ProfileImage;
 import com.michael.expense.entity.User;
 import com.michael.expense.entity.enumerations.UserRole;
 import com.michael.expense.exceptions.payload.EmailExistException;
@@ -13,10 +14,12 @@ import com.michael.expense.payload.response.UserResponse;
 import com.michael.expense.repository.UserRepository;
 import com.michael.expense.service.EmailConfirmationTokenService;
 import com.michael.expense.service.EmailSender;
+import com.michael.expense.service.ProfileImageService;
 import com.michael.expense.service.UserService;
 import com.michael.expense.utility.EmailBuilder;
 import com.michael.expense.utility.RandomUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
@@ -30,12 +33,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import static com.michael.expense.constant.SecurityConstant.LINK_FOR_CONFIRMATION;
 import static com.michael.expense.constant.UserConstant.*;
 
 @Service
@@ -44,8 +46,6 @@ import static com.michael.expense.constant.UserConstant.*;
 @Transactional //!!
 public class UserServiceImpl implements UserService {
 
-    public static final String LINK_FOR_CONFIRMATION = "http://localhost:8080/api/v1/confirm_email?token=";
-
     private final UserRepository userRepository;
     private final ModelMapper mapper;
     private final PasswordEncoder passwordEncoder;
@@ -53,8 +53,9 @@ public class UserServiceImpl implements UserService {
     private final EmailBuilder emailBuilder;
     private final RandomUtils randomUtils;
     private final EmailSender emailSender;
+    private final ProfileImageService profileImageService;
 
-
+    @SneakyThrows
     @Override
     public String createUser(UserRequest userRequest) {
         validateNewUsernameAndEmail(
@@ -69,24 +70,15 @@ public class UserServiceImpl implements UserService {
                 .email(userRequest.getEmail())
                 .password(passwordEncoder.encode(userRequest.getPassword()))
                 .userRole(UserRole.ROLE_USER)
-                .isNotLocked(false)
+                .isNotLocked(true)
                 .build();
         user = userRepository.save(user);
 
-        String token = randomUtils.generateTokenForEmailVerification();
-        EmailConfirmationToken confirmationToken = EmailConfirmationToken.builder()
-                .token(token)
-                .createdAt(LocalDateTime.now())
-                .expiredAt(LocalDateTime.now().plusMinutes(15))
-                .user(user)
-                .build();
+        ProfileImage profileImage = profileImageService.saveTempProfileImage(user);
+        user.setProfileImage(profileImage);
+        user = userRepository.save(user);
 
-        emailConfirmationTokenService.saveConfirmationToken(confirmationToken);
-        String link = LINK_FOR_CONFIRMATION + token;
-        emailSender.sendEmailForVerification(
-                user.getEmail(),
-                emailBuilder.buildEmailForConfirmationEmail(user.getFirstName(), link)
-        );
+        verificationEmail(user);
 
         return "User registered successfully! \n" +
                 "Check your email address.";
@@ -120,12 +112,10 @@ public class UserServiceImpl implements UserService {
         return mapper.map(findUserByUsernameInDB(username), UserResponse.class);
     }
 
-
-
     @Override
     public UserPaginationResponse getAllUsers(int pageNo, int pageSiZe, String sortBy, String sortDir) {
         Pageable pageable = createPageable(pageNo, pageSiZe, sortBy, sortDir);
-        Page<User> users =  userRepository.findAll(pageable);
+        Page<User> users = userRepository.findAll(pageable);
 
         List<UserResponse> userResponses = users.stream()
                 .map(user -> mapper.map(user, UserResponse.class))
@@ -162,6 +152,23 @@ public class UserServiceImpl implements UserService {
         User user = getLoggedInUser();
         userRepository.delete(user);
         return new MessageResponse(String.format(USER_DELETED, user.getUsername()));
+    }
+
+    private void verificationEmail(User user) {
+        String token = randomUtils.generateTokenForEmailVerification();
+        EmailConfirmationToken confirmationToken = EmailConfirmationToken.builder()
+                .token(token)
+                .createdAt(LocalDateTime.now())
+                .expiredAt(LocalDateTime.now().plusMinutes(15))
+                .user(user)
+                .build();
+
+        emailConfirmationTokenService.saveConfirmationToken(confirmationToken);
+        String link = LINK_FOR_CONFIRMATION + token;
+        emailSender.sendEmailForVerification(
+                user.getEmail(),
+                emailBuilder.buildEmailForConfirmationEmail(user.getFirstName(), link)
+        );
     }
 
 
@@ -215,7 +222,6 @@ public class UserServiceImpl implements UserService {
     private String firstLetterUpper(String world) {
         String[] words = world.split(" ");
         StringBuilder result = new StringBuilder();
-
         for (String word : words) {
             if (word.length() > 0) {
                 char firstChar = Character.toUpperCase(word.charAt(0));

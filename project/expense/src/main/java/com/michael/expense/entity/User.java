@@ -5,7 +5,6 @@ import com.michael.expense.entity.enumerations.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,12 +50,12 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Expense> expenses;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ProfileImage profileImage;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime registration_timestamp;
-    @UpdateTimestamp()
-    @Column
-    private LocalDateTime update_profile_timestamp;
 
     @Column(name = "last_login_date")
     private LocalDateTime lastLoginDate;
@@ -77,7 +76,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return !isNotLocked;
+        return isNotLocked;
     }
 
     @Override

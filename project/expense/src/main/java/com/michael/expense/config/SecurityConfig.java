@@ -24,7 +24,6 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final AuthenticationProvider authenticationProvider;
-    //  private final LogoutService logoutService;
     private final LogoutHandler logoutHandler;
 
 

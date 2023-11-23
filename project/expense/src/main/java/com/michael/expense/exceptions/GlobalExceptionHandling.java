@@ -8,6 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,55 +42,92 @@ public class GlobalExceptionHandling extends ResponseEntityExceptionHandler {
     public static final String ERROR_PATH = "/error";
 
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseMessage> GlobalException(Exception exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(BAD_REQUEST, exception.getMessage());
+    }
+
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ErrorResponseMessage> iOException(IOException exception) {
         log.error(exception.getMessage());
         return createHttpResponse(INTERNAL_SERVER_ERROR, ERROR_PROCESSING_FILE);
     }
 
-    @ExceptionHandler(ExpenseNotFoundException.class)
-    public ResponseEntity<ErrorResponseMessage> handleMethodExpenseNotFound(ExpenseNotFoundException exception) {
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponseMessage> accountDisabledException(DisabledException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(BAD_REQUEST, ACCOUNT_DISABLED);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponseMessage> badCredentialsException(BadCredentialsException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(BAD_REQUEST, INCORRECT_CREDENTIALS);
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ErrorResponseMessage> lockedException(LockedException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(UNAUTHORIZED, ACCOUNT_LOCKED);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseMessage> TypeMismatchException(MethodArgumentTypeMismatchException exception, WebRequest request) {
         log.error(exception.getMessage());
         return createHttpResponse(BAD_REQUEST, exception.getMessage());
     }
 
-    @ExceptionHandler( MonthNotFoundException.class)
-    public ResponseEntity<ErrorResponseMessage> handleMethodMonthNotFoundException( MonthNotFoundException exception) {
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseMessage> accessDeniedException(AccessDeniedException exception) {
         log.error(exception.getMessage());
-        return createHttpResponse(BAD_REQUEST, exception.getMessage());
+        return createHttpResponse(FORBIDDEN, NOT_ENOUGH_PERMISSION);
     }
+
+    @ExceptionHandler(ExpenseNotFoundException.class)
+    public ResponseEntity<ErrorResponseMessage> ExpenseNotFoundException(ExpenseNotFoundException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(MonthNotFoundException.class)
+    public ResponseEntity<ErrorResponseMessage> MonthNotFoundException(MonthNotFoundException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(NOT_FOUND, exception.getMessage());
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponseMessage> handleMethodUserNotFound(UserNotFoundException exception) {
         log.error(exception.getMessage());
-        return createHttpResponse(BAD_REQUEST, exception.getMessage());
+        return createHttpResponse(NOT_FOUND, exception.getMessage());
     }
 
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseMessage> handleMethodGlobalException(Exception ex) {
-        return createHttpResponse(BAD_REQUEST, ex.getMessage());
-    }
 
     @ExceptionHandler(UsernameExistException.class)
     public ResponseEntity<ErrorResponseMessage> usernameExistException(UsernameExistException exception) {
+        log.error(exception.getMessage());
         return createHttpResponse(CONFLICT, exception.getMessage());
     }
 
     @ExceptionHandler(EmailExistException.class)
     public ResponseEntity<ErrorResponseMessage> emailExistException(EmailExistException exception) {
+        log.error(exception.getMessage());
         return createHttpResponse(CONFLICT, exception.getMessage());
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponseMessage> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
-        return createHttpResponse(BAD_REQUEST, ex.getMessage());
-    }
-
-
     @ExceptionHandler(TokenException.class)
-    public ResponseEntity<ErrorResponseMessage> handleMethodArgumentTypeMismatchException(TokenException ex) {
-        return createHttpResponse(BAD_REQUEST, ex.getMessage());
+    public ResponseEntity<ErrorResponseMessage> TokenExceptionException(TokenException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(BAD_REQUEST, exception.getMessage());
     }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ErrorResponseMessage> ImageNotFoundException(ImageNotFoundException exception) {
+        log.error(exception.getMessage());
+        return createHttpResponse(NOT_FOUND, exception.getMessage());
+    }
+
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
